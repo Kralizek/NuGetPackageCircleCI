@@ -1,26 +1,6 @@
 version: 2.1
 
 jobs:
-  verify:
-    docker: 
-      - image: mcr.microsoft.com/dotnet/sdk:7.0
-    steps:
-      - checkout
-      - run:
-          name: Verify
-          command: |
-            dotnet build -p:TreatWarningsAsErrors=True -p:EnforceCodeStyleInBuild=True
-  test:
-    docker: 
-      - image: mcr.microsoft.com/dotnet/sdk:7.0
-    steps:
-      - checkout
-      - run:
-          name: Run Tests
-          command: |
-            dotnet test --logger "junit;LogFilePath=$(pwd)/outputs/tests/{assembly}/{framework}/TestResults.xml"
-      - store_test_results:
-          path: outputs/tests
   pack:
     docker:
       - image: mcr.microsoft.com/dotnet/sdk:7.0-alpine
@@ -34,6 +14,16 @@ jobs:
           name: Restore tools
           command: |
             dotnet tool restore
+      - run:
+          name: Verify
+          command: |
+            dotnet build -p:TreatWarningsAsErrors=True -p:EnforceCodeStyleInBuild=True
+      - run:
+          name: Run Tests
+          command: |
+            dotnet test --logger "junit;LogFilePath=$(pwd)/outputs/tests/{assembly}/{framework}/TestResults.xml"
+      - store_test_results:
+          path: outputs/tests
       - run:
           name: Pack
           command: |
@@ -62,19 +52,7 @@ workflows:
   version: 2
   default:
     jobs:
-      - verify:
-          filters:
-            tags:
-              only: /.*/
-      - test:
-          requires:
-            - verify
-          filters:
-            tags:
-              only: /.*/
       - pack:
-          requires:
-            - test
           filters:
             tags:
               only: /.*/
