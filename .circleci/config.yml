@@ -9,7 +9,7 @@ jobs:
       - run:
           name: Verify
           command: |
-            dotnet build -p:TreatWarningsAsErrors=True
+            dotnet build -p:TreatWarningsAsErrors=True -p:EnforceCodeStyleInBuild=True
   test:
     docker: 
       - image: mcr.microsoft.com/dotnet/sdk:7.0
