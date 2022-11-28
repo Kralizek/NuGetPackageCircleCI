@@ -1,0 +1,87 @@
+version: 2.1
+
+jobs:
+  verify:
+    docker: 
+      - image: mcr.microsoft.com/dotnet/sdk:7.0
+    steps:
+      - checkout
+      - run:
+          name: Verify
+          command: |
+            dotnet build -p:TreatWarningsAsErrors=True
+  test:
+    docker: 
+      - image: mcr.microsoft.com/dotnet/sdk:7.0
+    steps:
+      - checkout
+      - run:
+          command: |
+            dotnet test
+  pack:
+    docker:
+      - image: mcr.microsoft.com/dotnet/sdk:7.0-alpine
+    steps:
+      - run:
+          name: Pathc image
+          command: |
+            apk add openssh git jq
+      - checkout
+      - run:
+          name: Restore tools
+          command: |
+            dotnet tool restore
+      - run:
+          name: Pack
+          command: |
+            VERSION=$(dotnet gitversion | jq -r ".SemVer")
+            dotnet pack --configuration Release -p:Version=$VERSION -o ./outputs/packages/
+      - store_artifacts:
+          path: ./outputs/packages
+          destination: packages
+      - persist_to_workspace:
+          root: ./outputs/packages
+          paths:
+            - "*.nupkg"
+            - "*.snupkg"
+  push:
+    docker:
+      - image: mcr.microsoft.com/dotnet/sdk:7.0
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Push to NuGet
+          command: |
+            dotnet nuget push /tmp/workspace/*.nupkg -k ${NUGET_TOKEN} --skip-duplicate --no-symbols true
+
+workflows:
+  version: 2
+  default:
+    jobs:
+      - verify:
+          filters:
+            tags:
+              only: /.*/
+      - test:
+          requires:
+            - verify
+          filters:
+            tags:
+              only: /.*/
+      - pack:
+          requires:
+            - test
+          filters:
+            tags:
+              only: /.*/
+      - push:
+          requires:
+            - pack
+          context:
+            - NuGet
+          filters:
+              tags:
+                only: /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
+              branches:
+                ignore: /.*/
