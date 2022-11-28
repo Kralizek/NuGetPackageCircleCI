@@ -16,14 +16,17 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Run Tests
           command: |
-            dotnet test
+            dotnet test --logger "junit;LogFilePath=$(pwd)/outputs/tests/{assembly}/{framework}/TestResults.xml"
+      - store_test_results:
+          path: outputs/tests
   pack:
     docker:
       - image: mcr.microsoft.com/dotnet/sdk:7.0-alpine
     steps:
       - run:
-          name: Pathc image
+          name: Patch image
           command: |
             apk add openssh git jq
       - checkout
