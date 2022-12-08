@@ -12,8 +12,9 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dotnet-project-{{ checksum "./src/NuGetLibrary/NuGetLibrary.csproj" }}
-            - dotnet-project-
+            - dotnet-{{ checksum "./.config/dotnet-tools.json" }}-{{ checksum "./src/NuGetLibrary/NuGetLibrary.csproj" }}
+            - dotnet-{{ checksum "./.config/dotnet-tools.json" }}
+            - dotnet-
       - run:
           name: Restore tools
           command: |
@@ -25,7 +26,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.nuget/packages
-          key: dotnet-project-{{ checksum "./src/NuGetLibrary/NuGetLibrary.csproj" }}
+          key: dotnet-{{ checksum "./.config/dotnet-tools.json" }}-{{ checksum "./src/NuGetLibrary/NuGetLibrary.csproj" }}
       - run:
           name: Verify
           command: |
