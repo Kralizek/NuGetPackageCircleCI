@@ -41,7 +41,7 @@ jobs:
           name: Pack
           command: |
             VERSION=$(dotnet gitversion | jq -r ".SemVer")
-            dotnet pack --configuration Release -p:Version=$VERSION -o ./outputs/packages/
+            dotnet pack --configuration Release -p:Version=$VERSION -o ./outputs/packages/ -p:SymbolPackageFormat=snupkg -p:IncludeSymbols=True -p:DebugType=portable
       - store_artifacts:
           path: ./outputs/packages
           destination: packages
