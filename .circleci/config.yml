@@ -10,10 +10,15 @@ jobs:
           command: |
             apk add openssh git jq
       - checkout
+      - run:
+          name: Create cache key
+          command: |
+            touch hashes.txt
+            sha1sum ./.config/dotnet-tools.json >> hashes.txt
+            find . -name "*.csproj*" -type f -exec sha1sum {} \; >> hashes.txt
       - restore_cache:
           keys:
-            - dotnet-{{ checksum "./.config/dotnet-tools.json" }}-{{ checksum "./src/NuGetLibrary/NuGetLibrary.csproj" }}
-            - dotnet-{{ checksum "./.config/dotnet-tools.json" }}
+            - dotnet-{{ checksum "hashes.txt" }}
             - dotnet-
       - run:
           name: Restore tools
@@ -26,7 +31,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.nuget/packages
-          key: dotnet-{{ checksum "./.config/dotnet-tools.json" }}-{{ checksum "./src/NuGetLibrary/NuGetLibrary.csproj" }}
+          key: dotnet-{{ checksum "hashes.txt" }}
       - run:
           name: Verify
           command: |
