@@ -10,10 +10,22 @@ jobs:
           command: |
             apk add openssh git jq
       - checkout
+      - restore_cache:
+          keys:
+            - dotnet-project-{{ checksum "./src/NuGetLibrary/NuGetLibrary.csproj" }}
+            - dotnet-project-
       - run:
           name: Restore tools
           command: |
             dotnet tool restore
+      - run:
+          name: Restore dependencies
+          command: |
+            dotnet restore
+      - save_cache:
+          paths:
+            - ~/.nuget/packages
+          key: dotnet-project-{{ checksum "./src/NuGetLibrary/NuGetLibrary.csproj" }}
       - run:
           name: Verify
           command: |
