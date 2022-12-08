@@ -64,7 +64,7 @@ jobs:
       - run:
           name: Push to NuGet
           command: |
-            dotnet nuget push /tmp/workspace/*.nupkg -k ${NUGET_TOKEN} --skip-duplicate --no-symbols true
+            dotnet nuget push /tmp/workspace/*.* --api-key ${NUGET_TOKEN} --skip-duplicate --source https://api.nuget.org/v3/index.json
 
 workflows:
   version: 2
